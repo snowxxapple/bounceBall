@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang='zh'>
+
+<head>
+    <meta charset='utf-8'>
+    <title>弹跳球</title>
+    <!-- 主要应用：定时器 梯度着色 碰撞检测 -->
+    <style type="text/css">
+    input:valid {
+        background: transparent;
+    }
+    
+    input:invalid {
+        background: red;
+    }
+    </style>
+</head>
+
+<body>
+    <h2 style='text-align:center;margin:block;'>弹跳球</h2>
+    <canvas id='cv' style='display:block;background:#cfe;margin:auto auto;' height='500px;' width='800px;'></canvas>
+    <br/>
+    <!-- 直接在canvas里面写height width 在js中可以直接 .height .width读到 否则要.style.height才能读到，并且要转换为数字类型 -->
+    <div style='text-align:center;'>
+    <form id='f' name='f'>
+        水平速度：
+        <input type='number' name='inp1' min='-10' max='10'>
+         垂直速度：
+        <input type='number' name='inp2' min='-10' max='10'>
+        <button id='sub'>Change</button>
+        <span id='tishi' style='display:inline-block;height:30px; width:120px;'></span>
+    </form>
+</div>
+</body>
+<script type="text/javascript">
+var ballX = 300; //球的初始位置
+var ballY = 200;
+var ballVx = 3; //球的速度变化量
+var ballVy = 2;
+var ctx = document.getElementById('cv').getContext('2d');
+var color;
+var timer;
+var ballRadius = 15; //球的半径
+var boxHou = 15; //盒子厚度 画笔的宽度
+var cv = document.getElementById('cv');
+var boxWidth = 400; //盒子大小
+var boxHeight = 300;
+var boxX = (cv.width - boxWidth) * 0.5 - boxHou; //盒子的位置
+var boxY = (cv.height - boxHeight) * 0.5 - boxHou;
+window.onload = function() {
+    //画墙
+    init();
+    //画球
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fillStyle = 'yellow';
+    ctx.fill();
+    //球动
+    moveball();
+    timer = setInterval(moveball, 10);
+}
+function init() {
+    var grad = ctx.createLinearGradient(boxX, boxY, boxX + boxWidth, boxY + boxHeight);
+    var hue = [
+        [255, 0, 0],
+        [255, 255, 0],
+        [0, 255, 0],
+        [0, 255, 255],
+        [0, 0, 255],
+        [255, 0, 255]
+    ]; //数组里面又包含了数组
+    
+    for(var i=0;i<hue.length;i++)
+    {
+    	color="rgb("+hue[i][0]+","+hue[i][1]+","+hue[i][2]+")";
+    	// console.log(color);
+    	grad.addColorStop(i/6,color);
+
+    }
+    // grad.addColorStop(0, 'rgb(255,0,0)');//和上面的for等效
+    // grad.addColorStop(1 / 6, 'rgb(255,255,0)');
+    // grad.addColorStop(2 / 6, 'rgb(0,255,0)');
+    // grad.addColorStop(3 / 6, 'rgb(0,255,255)');
+    // grad.addColorStop(4 / 6, 'rgb(0,0,255)');
+    // grad.addColorStop(5 / 6, 'rgb(255,0,255)');
+
+    ctx.lineWidth = boxHou;
+    ctx.fillStyle = grad;
+    ctx.fillRect(boxX, boxY, boxWidth, boxHou); //上墙
+    ctx.fillRect(boxX, boxY, boxHou, boxHeight); //左墙
+    ctx.fillRect(boxX + boxWidth - boxHou, boxY, boxHou, boxHeight); //右墙
+    ctx.fillRect(boxX, boxY + boxHeight - boxHou, boxWidth, boxHou); //下墙 
+}
+
+function moveball() {
+    //清除画布上的图形
+    ctx.clearRect(boxX, boxY, boxX + boxWidth, boxY + boxHeight);
+    //画墙
+    init();
+    //判断球是否碰到墙
+    checkCollaps();
+    //画球
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fillStyle='yellow';
+    ctx.fill();
+}
+function checkCollaps(){
+	ballX=ballX+ballVx;
+	ballY=ballY+ballVy;
+	var boundYup=boxY+2*boxHou;
+	var boundYdown=boxY+boxHeight-2*boxHou;
+	var boundXleft=boxX+2*boxHou;
+	var boundXright=boxX+boxWidth-2*boxHou;
+	if(ballX>=boundXright)//碰到右边的墙
+	{
+		ballVx=-ballVx*0.8;
+		ballVy=ballVy*0.9;
+		ballX=boundXright;
+		
+	}
+	if(ballX<=boundXleft)//碰到左边界
+	{
+		ballVx=-ballVx*0.8;
+		ballVy=ballVy*0.9;
+		ballX=boundXleft;
+		
+	}
+	if(ballY<=boundYup)//碰到上边界
+	{
+		ballVy=-ballVy*0.8;
+		ballVx=ballVx*0.9;
+		ballY==boundYup;
+		
+	}
+	if(ballY>=boundYdown)
+	{
+		ballVy=-ballVy*0.8;
+		ballVx=ballVx*0.9;
+		ballY=boundYdown;
+	}
+	if(ballVx==0&&ballVy==0)
+	{
+		clearInterval(timer);
+	}
+}
+document.getElementById('sub').onclick=function(){	
+	if(Number(document.f.inp1.value)>10||Number(document.f.inp1.value)<-10||Number(document.f.inp2.value)>10||Number(document.f.inp2.value)<-10)
+	{
+		document.getElementById('tishi').innerHTML='输入信息有误！';
+	}
+else{
+	ballVx=Number(document.f.inp1.value);
+	ballVy=Number(document.f.inp2.value);
+}
+	
+	
+	return false;//避免表单提交
+}
+</script>
+
+</html>
